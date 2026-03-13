@@ -9,11 +9,11 @@ function App() {
   const [date, setDate] = useState("");
 
   useEffect(() => {
-    fetch("http://localhost:3001/services")
+    fetch("https://barbershop-api-j6w4.onrender.com/services")
       .then((res) => res.json())
       .then((data) => setServices(data));
 
-    fetch("http://localhost:3001/barbers")
+    fetch("https://barbershop-api-j6w4.onrender.com/barbers")
       .then((res) => res.json())
       .then((data) => setBarbers(data));
   }, []);
