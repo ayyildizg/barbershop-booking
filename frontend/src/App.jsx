@@ -1,6 +1,15 @@
 import { useEffect, useState } from "react";
 
 function App() {
+  const API_URL = "http://localhost:3001";
+
+  const [user, setUser] = useState(null);
+  const [isLogin, setIsLogin] = useState(true);
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
   const [services, setServices] = useState([]);
   const [barbers, setBarbers] = useState([]);
 
@@ -8,75 +17,207 @@ function App() {
   const [selectedBarber, setSelectedBarber] = useState("");
   const [date, setDate] = useState("");
 
-  useEffect(() => {
-    fetch("https://barbershop-api-j6w4.onrender.com/services")
-      .then((res) => res.json())
-      .then((data) => setServices(data));
+  const [appointments, setAppointments] = useState([]);
 
-    fetch("https://barbershop-api-j6w4.onrender.com/barbers")
+  // 🔹 SERVICES + BARBERS
+  useEffect(() => {
+    fetch(`${API_URL}/services`)
       .then((res) => res.json())
-      .then((data) => setBarbers(data));
+      .then(setServices);
+
+    fetch(`${API_URL}/barbers`)
+      .then((res) => res.json())
+      .then(setBarbers);
   }, []);
 
-  const createBooking = () => {
-    alert(
-      `Appointment created:
-Service: ${selectedService}
-Barber: ${selectedBarber}
-Date: ${date}`,
-    );
+  // 🔹 USER APPOINTMENTS
+  useEffect(() => {
+    if (user) {
+      getAppointments();
+    }
+  }, [user]);
+
+  const getAppointments = async () => {
+    try {
+      const res = await fetch(`${API_URL}/appointments/${user.id}`);
+      const data = await res.json();
+      setAppointments(data);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  return (
-    <div style={{ padding: "40px", fontFamily: "Arial" }}>
-      <h1>Barbershop Booking System</h1>
+  // 🔹 LOGIN / REGISTER
+  const handleAuth = async () => {
+    const url = isLogin ? `${API_URL}/login` : `${API_URL}/register`;
 
-      <h2>Available Services</h2>
+    const body = isLogin ? { email, password } : { name, email, password };
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    const data = await res.json();
+
+    if (data.error) {
+      alert(data.error);
+      return;
+    }
+
+    setUser(data);
+    alert("Success!");
+  };
+
+  // 🔹 CREATE APPOINTMENT
+  const createBooking = async () => {
+    if (!selectedService || !selectedBarber || !date) {
+      alert("Fill all fields");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/appointments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: user.id,
+          barber_id: Number(selectedBarber),
+          service_id: Number(selectedService),
+          date,
+          time: "10:00",
+          status: "pending",
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.error) {
+        alert(data.error);
+        return;
+      }
+
+      alert("Appointment created!");
+
+      // 🔥 YENİDEN YÜKLE
+      getAppointments();
+    } catch (error) {
+      console.error(error);
+      alert("Error!");
+    }
+  };
+
+  // 🔴 LOGIN EKRANI
+  if (!user) {
+    return (
+      <div style={{ padding: 40 }}>
+        <h1>Barbershop System</h1>
+        <h2>{isLogin ? "Login" : "Register"}</h2>
+
+        {!isLogin && (
+          <input placeholder="Name" onChange={(e) => setName(e.target.value)} />
+        )}
+
+        <br />
+        <br />
+
+        <input placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
+
+        <br />
+        <br />
+
+        <input
+          type="password"
+          placeholder="Password"
+          onChange={(e) => setPassword(e.target.value)}
+        />
+
+        <br />
+        <br />
+
+        <button onClick={handleAuth}>{isLogin ? "Login" : "Register"}</button>
+
+        <br />
+        <br />
+
+        <button onClick={() => setIsLogin(!isLogin)}>
+          Switch to {isLogin ? "Register" : "Login"}
+        </button>
+      </div>
+    );
+  }
+
+  // 🟢 ANA EKRAN
+  return (
+    <div style={{ padding: "40px" }}>
+      <h1>Welcome, {user.name}</h1>
+
+      <h2>Services</h2>
       <ul>
-        {services.map((service) => (
-          <li key={service.id}>
-            {service.name} — ${service.price}
+        {services.map((s) => (
+          <li key={s.id}>
+            {s.name} — ${s.price}
           </li>
         ))}
       </ul>
 
-      <h2>Our Barbers</h2>
+      <h2>Barbers</h2>
       <ul>
-        {barbers.map((barber) => (
-          <li key={barber.id}>{barber.name}</li>
+        {barbers.map((b) => (
+          <li key={b.id}>{b.name}</li>
         ))}
       </ul>
 
       <h2>Create Appointment</h2>
 
-      <div>
-        <label>Service:</label>
-        <select onChange={(e) => setSelectedService(e.target.value)}>
-          <option>Select service</option>
-          {services.map((service) => (
-            <option key={service.id}>{service.name}</option>
-          ))}
-        </select>
-      </div>
+      <select onChange={(e) => setSelectedService(e.target.value)}>
+        <option>Select service</option>
+        {services.map((s) => (
+          <option key={s.id} value={s.id}>
+            {s.name}
+          </option>
+        ))}
+      </select>
 
-      <div>
-        <label>Barber:</label>
-        <select onChange={(e) => setSelectedBarber(e.target.value)}>
-          <option>Select barber</option>
-          {barbers.map((barber) => (
-            <option key={barber.id}>{barber.name}</option>
-          ))}
-        </select>
-      </div>
+      <br />
+      <br />
 
-      <div>
-        <label>Date:</label>
-        <input type="date" onChange={(e) => setDate(e.target.value)} />
-      </div>
+      <select onChange={(e) => setSelectedBarber(e.target.value)}>
+        <option>Select barber</option>
+        {barbers.map((b) => (
+          <option key={b.id} value={b.id}>
+            {b.name}
+          </option>
+        ))}
+      </select>
 
+      <br />
+      <br />
+
+      <input type="date" onChange={(e) => setDate(e.target.value)} />
+
+      <br />
       <br />
 
       <button onClick={createBooking}>Create Appointment</button>
+
+      {/* 🔥 BURASI YENİ */}
+      <h2>My Appointments</h2>
+
+      {appointments.length === 0 ? (
+        <p>No appointments yet</p>
+      ) : (
+        <ul>
+          {appointments.map((a) => (
+            <li key={a.id}>
+              {a.date} — {a.time} — {a.status}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
