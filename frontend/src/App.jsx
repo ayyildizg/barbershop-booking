@@ -21,13 +21,23 @@ function App() {
 
   // 🔹 SERVICES + BARBERS
   useEffect(() => {
+    console.log("FETCHING SERVICES...");
+
     fetch(`${API_URL}/services`)
       .then((res) => res.json())
-      .then(setServices);
+      .then((data) => {
+        console.log("SERVICES:", data);
+        setServices(data);
+      })
+      .catch((err) => console.error("SERVICES ERROR:", err));
 
     fetch(`${API_URL}/barbers`)
       .then((res) => res.json())
-      .then(setBarbers);
+      .then((data) => {
+        console.log("BARBERS:", data);
+        setBarbers(data);
+      })
+      .catch((err) => console.error("BARBERS ERROR:", err));
   }, []);
 
   // 🔹 USER APPOINTMENTS
@@ -41,33 +51,47 @@ function App() {
     try {
       const res = await fetch(`${API_URL}/appointments/${user.id}`);
       const data = await res.json();
+      console.log("APPOINTMENTS:", data);
       setAppointments(data);
     } catch (err) {
-      console.error(err);
+      console.error("APPOINTMENTS ERROR:", err);
     }
   };
 
-  // 🔹 LOGIN / REGISTER
+  // 🔹 LOGIN / REGISTER (DEBUG’LU)
   const handleAuth = async () => {
+    console.log("BUTTON CLICKED");
+
     const url = isLogin ? `${API_URL}/login` : `${API_URL}/register`;
 
     const body = isLogin ? { email, password } : { name, email, password };
 
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    console.log("URL:", url);
+    console.log("BODY:", body);
 
-    const data = await res.json();
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
 
-    if (data.error) {
-      alert(data.error);
-      return;
+      console.log("STATUS:", res.status);
+
+      const data = await res.json();
+      console.log("RESPONSE:", data);
+
+      if (data.error) {
+        alert("ERROR: " + data.error);
+        return;
+      }
+
+      setUser(data);
+      alert("SUCCESS LOGIN");
+    } catch (err) {
+      console.error("FETCH ERROR:", err);
+      alert("Network error!");
     }
-
-    setUser(data);
-    alert("Success!");
   };
 
   // 🔹 CREATE APPOINTMENT
@@ -101,8 +125,6 @@ function App() {
       }
 
       alert("Appointment created!");
-
-      // 🔥 YENİDEN YÜKLE
       getAppointments();
     } catch (error) {
       console.error(error);
@@ -118,11 +140,15 @@ function App() {
         <h2>{isLogin ? "Login" : "Register"}</h2>
 
         {!isLogin && (
-          <input placeholder="Name" onChange={(e) => setName(e.target.value)} />
+          <>
+            <input
+              placeholder="Name"
+              onChange={(e) => setName(e.target.value)}
+            />
+            <br />
+            <br />
+          </>
         )}
-
-        <br />
-        <br />
 
         <input placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
 
@@ -154,6 +180,8 @@ function App() {
   return (
     <div style={{ padding: "40px" }}>
       <h1>Welcome, {user.name}</h1>
+
+      <button onClick={() => setUser(null)}>Logout</button>
 
       <h2>Services</h2>
       <ul>
@@ -204,7 +232,6 @@ function App() {
 
       <button onClick={createBooking}>Create Appointment</button>
 
-      {/* 🔥 BURASI YENİ */}
       <h2>My Appointments</h2>
 
       {appointments.length === 0 ? (
