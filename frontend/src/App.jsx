@@ -19,28 +19,20 @@ function App() {
 
   const [appointments, setAppointments] = useState([]);
 
-  // 🔹 SERVICES + BARBERS
+  // SERVICES + BARBERS
   useEffect(() => {
-    console.log("FETCHING SERVICES...");
-
     fetch(`${API_URL}/services`)
       .then((res) => res.json())
-      .then((data) => {
-        console.log("SERVICES:", data);
-        setServices(data);
-      })
-      .catch((err) => console.error("SERVICES ERROR:", err));
+      .then(setServices)
+      .catch(console.error);
 
     fetch(`${API_URL}/barbers`)
       .then((res) => res.json())
-      .then((data) => {
-        console.log("BARBERS:", data);
-        setBarbers(data);
-      })
-      .catch((err) => console.error("BARBERS ERROR:", err));
+      .then(setBarbers)
+      .catch(console.error);
   }, []);
 
-  // 🔹 USER APPOINTMENTS
+  // USER APPOINTMENTS
   useEffect(() => {
     if (user) {
       getAppointments();
@@ -51,23 +43,17 @@ function App() {
     try {
       const res = await fetch(`${API_URL}/appointments/${user.id}`);
       const data = await res.json();
-      console.log("APPOINTMENTS:", data);
       setAppointments(data);
     } catch (err) {
-      console.error("APPOINTMENTS ERROR:", err);
+      console.error(err);
     }
   };
 
-  // 🔹 LOGIN / REGISTER (DEBUG’LU)
+  // 🔥 FIXLENMİŞ AUTH
   const handleAuth = async () => {
-    console.log("BUTTON CLICKED");
-
     const url = isLogin ? `${API_URL}/login` : `${API_URL}/register`;
 
     const body = isLogin ? { email, password } : { name, email, password };
-
-    console.log("URL:", url);
-    console.log("BODY:", body);
 
     try {
       const res = await fetch(url, {
@@ -76,25 +62,26 @@ function App() {
         body: JSON.stringify(body),
       });
 
-      console.log("STATUS:", res.status);
-
       const data = await res.json();
-      console.log("RESPONSE:", data);
 
       if (data.error) {
-        alert("ERROR: " + data.error);
+        alert(data.error);
         return;
       }
 
-      setUser(data);
-      alert("SUCCESS LOGIN");
+      // 🔥 KRİTİK FIX BURASI
+      const loggedUser = isLogin ? data.user : data;
+
+      setUser(loggedUser);
+
+      alert(isLogin ? "Login successful" : "Register successful");
     } catch (err) {
-      console.error("FETCH ERROR:", err);
-      alert("Network error!");
+      console.error(err);
+      alert("Network error");
     }
   };
 
-  // 🔹 CREATE APPOINTMENT
+  // CREATE APPOINTMENT
   const createBooking = async () => {
     if (!selectedService || !selectedBarber || !date) {
       alert("Fill all fields");
@@ -113,7 +100,6 @@ function App() {
           service_id: Number(selectedService),
           date,
           time: "10:00",
-          status: "pending",
         }),
       });
 
@@ -132,7 +118,7 @@ function App() {
     }
   };
 
-  // 🔴 LOGIN EKRANI
+  // LOGIN SCREEN
   if (!user) {
     return (
       <div style={{ padding: 40 }}>
@@ -176,7 +162,7 @@ function App() {
     );
   }
 
-  // 🟢 ANA EKRAN
+  // MAIN SCREEN
   return (
     <div style={{ padding: "40px" }}>
       <h1>Welcome, {user.name}</h1>
