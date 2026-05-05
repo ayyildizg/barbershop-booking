@@ -143,6 +143,17 @@ app.post("/login", async (req, res) => {
   }
 });
 
+// ✅ TEST DB CONNECTION
+app.get("/test-db", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT NOW()");
+    res.json(result.rows);
+  } catch (err) {
+    console.error("TEST DB ERROR:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // SERVER START
 const PORT = process.env.PORT || 3001;
 
