@@ -116,29 +116,30 @@ app.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   try {
+    console.log("LOGIN REQUEST:", email);
+
     const result = await pool.query("SELECT * FROM users WHERE email = $1", [
       email,
     ]);
 
-    // USER YOK
+    console.log("QUERY RESULT:", result.rows);
+
     if (result.rows.length === 0) {
       return res.status(401).json({ error: "User not found" });
     }
 
     const user = result.rows[0];
 
-    // PASSWORD YANLIŞ
     if (user.password !== password) {
       return res.status(401).json({ error: "Wrong password" });
     }
 
-    res.json({
-      message: "Login successful",
-      user,
-    });
+    res.json({ message: "Login successful", user });
   } catch (err) {
-    console.error("LOGIN ERROR:", err); // 🔥 bunu loglarda göreceksin
-    res.status(500).json({ error: "Server error" });
+    console.error("🔥 LOGIN ERROR FULL:", err);
+    res.status(500).json({
+      error: err.message,
+    });
   }
 });
 
