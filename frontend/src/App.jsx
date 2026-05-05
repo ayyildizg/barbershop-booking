@@ -23,36 +23,41 @@ function App() {
   useEffect(() => {
     fetch(`${API_URL}/services`)
       .then((res) => res.json())
-      .then(setServices)
+      .then((data) => setServices(Array.isArray(data) ? data : []))
       .catch(console.error);
 
     fetch(`${API_URL}/barbers`)
       .then((res) => res.json())
-      .then(setBarbers)
+      .then((data) => setBarbers(Array.isArray(data) ? data : []))
       .catch(console.error);
   }, []);
 
   // USER APPOINTMENTS
   useEffect(() => {
-    if (user && user.id) {
+    if (user?.id) {
       getAppointments();
     }
   }, [user]);
 
   const getAppointments = async () => {
     try {
-      if (!user || !user.id) return;
-
       const res = await fetch(`${API_URL}/appointments/${user.id}`);
       const data = await res.json();
 
-      setAppointments(data || []);
+      if (!Array.isArray(data)) {
+        console.error("APPOINTMENTS ERROR:", data);
+        setAppointments([]);
+        return;
+      }
+
+      setAppointments(data);
     } catch (err) {
       console.error(err);
+      setAppointments([]);
     }
   };
 
-  // 🔥 FIXLENMİŞ AUTH
+  // AUTH
   const handleAuth = async () => {
     const url = isLogin ? `${API_URL}/login` : `${API_URL}/register`;
 
@@ -72,9 +77,7 @@ function App() {
         return;
       }
 
-      // 🔥 KRİTİK FIX BURASI
       const loggedUser = isLogin ? data.user : data;
-
       setUser(loggedUser);
 
       alert(isLogin ? "Login successful" : "Register successful");
@@ -165,6 +168,9 @@ function App() {
     );
   }
 
+  // SAFE ARRAY
+  const safeAppointments = Array.isArray(appointments) ? appointments : [];
+
   // MAIN SCREEN
   return (
     <div style={{ padding: "40px" }}>
@@ -223,11 +229,11 @@ function App() {
 
       <h2>My Appointments</h2>
 
-      {appointments.length === 0 ? (
+      {safeAppointments.length === 0 ? (
         <p>No appointments yet</p>
       ) : (
         <ul>
-          {appointments.map((a) => (
+          {safeAppointments.map((a) => (
             <li key={a.id}>
               {a.date} — {a.time} — {a.status}
             </li>
