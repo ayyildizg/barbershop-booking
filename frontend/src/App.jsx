@@ -19,6 +19,15 @@ function App() {
 
   const [appointments, setAppointments] = useState([]);
 
+  // ✅ USER SESSION
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+  }, []);
+
   // SERVICES + BARBERS
   useEffect(() => {
     fetch(`${API_URL}/services`)
@@ -78,6 +87,10 @@ function App() {
       }
 
       const loggedUser = isLogin ? data.user : data;
+
+      // ✅ SAVE USER
+      localStorage.setItem("user", JSON.stringify(loggedUser));
+
       setUser(loggedUser);
 
       alert(isLogin ? "Login successful" : "Register successful");
@@ -129,6 +142,7 @@ function App() {
     return (
       <div style={{ padding: 40 }}>
         <h1>Barbershop System</h1>
+
         <h2>{isLogin ? "Login" : "Register"}</h2>
 
         {!isLogin && (
@@ -137,6 +151,7 @@ function App() {
               placeholder="Name"
               onChange={(e) => setName(e.target.value)}
             />
+
             <br />
             <br />
           </>
@@ -176,9 +191,17 @@ function App() {
     <div style={{ padding: "40px" }}>
       <h1>Welcome, {user?.name}</h1>
 
-      <button onClick={() => setUser(null)}>Logout</button>
+      <button
+        onClick={() => {
+          localStorage.removeItem("user");
+          setUser(null);
+        }}
+      >
+        Logout
+      </button>
 
       <h2>Services</h2>
+
       <ul>
         {services.map((s) => (
           <li key={s.id}>
@@ -188,6 +211,7 @@ function App() {
       </ul>
 
       <h2>Barbers</h2>
+
       <ul>
         {barbers.map((b) => (
           <li key={b.id}>{b.name}</li>
@@ -198,6 +222,7 @@ function App() {
 
       <select onChange={(e) => setSelectedService(e.target.value)}>
         <option>Select service</option>
+
         {services.map((s) => (
           <option key={s.id} value={s.id}>
             {s.name}
@@ -210,6 +235,7 @@ function App() {
 
       <select onChange={(e) => setSelectedBarber(e.target.value)}>
         <option>Select barber</option>
+
         {barbers.map((b) => (
           <option key={b.id} value={b.id}>
             {b.name}
