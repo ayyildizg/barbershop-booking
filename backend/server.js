@@ -1,11 +1,19 @@
 const express = require("express");
 const cors = require("cors");
-const pool = require("./db");
+const { Pool } = require("pg");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// ✅ DATABASE CONNECTION (RENDER UYUMLU)
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false,
+  },
+});
 
 // ROOT
 app.get("/", (req, res) => {
@@ -30,29 +38,26 @@ app.get("/barbers", (req, res) => {
   ]);
 });
 
-// ✅ GET USER APPOINTMENTS (KULLANICIYA ÖZEL)
+// ✅ GET USER APPOINTMENTS
 app.get("/appointments/:user_id", async (req, res) => {
-  const { user_id } = req.params;
-
   try {
     const result = await pool.query(
       "SELECT * FROM appointments WHERE user_id = $1 ORDER BY date DESC",
-      [user_id],
+      [req.params.user_id],
     );
-
     res.json(result.rows);
   } catch (err) {
-    console.error(err);
+    console.error("GET APPOINTMENTS ERROR:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
 
-// ✅ CREATE APPOINTMENT (GERÇEK + DOUBLE BOOKING)
+// ✅ CREATE APPOINTMENT
 app.post("/appointments", async (req, res) => {
   const { user_id, barber_id, service_id, date, time } = req.body;
 
   try {
-    // ❗ DOUBLE BOOKING KONTROLÜ
+    // DOUBLE BOOKING CHECK
     const existing = await pool.query(
       `SELECT * FROM appointments 
        WHERE barber_id = $1 AND date = $2 AND time = $3`,
@@ -65,25 +70,26 @@ app.post("/appointments", async (req, res) => {
       });
     }
 
-    // ✅ INSERT
+    // INSERT
     const result = await pool.query(
-      `INSERT INTO appointments (user_id, barber_id, service_id, date, time, status)
-       VALUES ($1, $2, $3, $4, $5, 'pending')
-       RETURNING *`,
+      `INSERT INTO appointments 
+      (user_id, barber_id, service_id, date, time, status)
+      VALUES ($1, $2, $3, $4, $5, 'pending')
+      RETURNING *`,
       [user_id, barber_id, service_id, date, time],
     );
 
     res.json({
-      message: "Appointment created successfully",
+      message: "Appointment created",
       data: result.rows[0],
     });
   } catch (err) {
-    console.error(err);
+    console.error("CREATE APPOINTMENT ERROR:", err);
     res.status(500).json({ error: "Database error" });
   }
 });
 
-// REGISTER
+// ✅ REGISTER
 app.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -95,35 +101,48 @@ app.post("/register", async (req, res) => {
 
     res.json(result.rows[0]);
   } catch (err) {
+    console.error("REGISTER ERROR:", err);
+
     if (err.code === "23505") {
       return res.status(400).json({ error: "Email already exists" });
     }
-    console.error(err);
+
     res.status(500).json({ error: "Server error" });
   }
 });
 
-// LOGIN
+// ✅ LOGIN (FIXLENMİŞ)
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const result = await pool.query(
-      "SELECT * FROM users WHERE email = $1 AND password = $2",
-      [email, password],
-    );
+    const result = await pool.query("SELECT * FROM users WHERE email = $1", [
+      email,
+    ]);
 
+    // USER YOK
     if (result.rows.length === 0) {
-      return res.status(400).json({ error: "Invalid credentials" });
+      return res.status(401).json({ error: "User not found" });
     }
 
-    res.json(result.rows[0]);
+    const user = result.rows[0];
+
+    // PASSWORD YANLIŞ
+    if (user.password !== password) {
+      return res.status(401).json({ error: "Wrong password" });
+    }
+
+    res.json({
+      message: "Login successful",
+      user,
+    });
   } catch (err) {
-    console.error(err);
+    console.error("LOGIN ERROR:", err); // 🔥 bunu loglarda göreceksin
     res.status(500).json({ error: "Server error" });
   }
 });
 
+// SERVER START
 const PORT = process.env.PORT || 3001;
 
 app.listen(PORT, () => {
