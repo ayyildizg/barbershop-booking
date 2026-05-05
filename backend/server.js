@@ -20,7 +20,7 @@ app.get("/", (req, res) => {
   res.send("Barbershop booking API is running");
 });
 
-// 🔥 FIX DB (EN ÖNEMLİ)
+// ✅ FIX USERS TABLE
 app.get("/fix-db", async (req, res) => {
   try {
     await pool.query(`
@@ -35,7 +35,35 @@ app.get("/fix-db", async (req, res) => {
     res.send("Users table created");
   } catch (err) {
     console.error("FIX DB ERROR:", err);
-    res.status(500).send(err.message);
+
+    res.status(500).json({
+      error: err.message,
+    });
+  }
+});
+
+// ✅ FIX APPOINTMENTS TABLE
+app.get("/fix-appointments", async (req, res) => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS appointments (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER,
+        barber_id INTEGER,
+        service_id INTEGER,
+        date TEXT,
+        time TEXT,
+        status TEXT
+      );
+    `);
+
+    res.send("Appointments table created");
+  } catch (err) {
+    console.error("FIX APPOINTMENTS ERROR:", err);
+
+    res.status(500).json({
+      error: err.message,
+    });
   }
 });
 
@@ -57,27 +85,35 @@ app.get("/barbers", (req, res) => {
   ]);
 });
 
-// APPOINTMENTS
+// ✅ GET APPOINTMENTS
 app.get("/appointments/:user_id", async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT * FROM appointments WHERE user_id = $1 ORDER BY date DESC",
+      "SELECT * FROM appointments WHERE user_id = $1 ORDER BY id DESC",
       [req.params.user_id],
     );
+
     res.json(result.rows);
   } catch (err) {
     console.error("GET APPOINTMENTS ERROR:", err);
-    res.status(500).json({ error: "Server error" });
+
+    res.status(500).json({
+      error: err.message,
+    });
   }
 });
 
+// ✅ CREATE APPOINTMENT
 app.post("/appointments", async (req, res) => {
   const { user_id, barber_id, service_id, date, time } = req.body;
 
   try {
+    // DOUBLE BOOKING CHECK
     const existing = await pool.query(
-      `SELECT * FROM appointments 
-       WHERE barber_id = $1 AND date = $2 AND time = $3`,
+      `SELECT * FROM appointments
+       WHERE barber_id = $1
+       AND date = $2
+       AND time = $3`,
       [barber_id, date, time],
     );
 
@@ -87,12 +123,13 @@ app.post("/appointments", async (req, res) => {
       });
     }
 
+    // INSERT
     const result = await pool.query(
-      `INSERT INTO appointments 
+      `INSERT INTO appointments
       (user_id, barber_id, service_id, date, time, status)
-      VALUES ($1, $2, $3, $4, $5, 'pending')
+      VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING *`,
-      [user_id, barber_id, service_id, date, time],
+      [user_id, barber_id, service_id, date, time, "pending"],
     );
 
     res.json({
@@ -100,12 +137,16 @@ app.post("/appointments", async (req, res) => {
       data: result.rows[0],
     });
   } catch (err) {
-    console.error("CREATE APPOINTMENT ERROR:", err);
-    res.status(500).json({ error: "Database error" });
+    console.error("🔥 FULL APPOINTMENT ERROR:", err);
+
+    res.status(500).json({
+      error: err.message,
+      detail: err.detail,
+    });
   }
 });
 
-// REGISTER
+// ✅ REGISTER
 app.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -120,14 +161,18 @@ app.post("/register", async (req, res) => {
     console.error("REGISTER ERROR:", err);
 
     if (err.code === "23505") {
-      return res.status(400).json({ error: "Email already exists" });
+      return res.status(400).json({
+        error: "Email already exists",
+      });
     }
 
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+      error: err.message,
+    });
   }
 });
 
-// LOGIN
+// ✅ LOGIN
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
@@ -137,30 +182,44 @@ app.post("/login", async (req, res) => {
     ]);
 
     if (result.rows.length === 0) {
-      return res.status(401).json({ error: "User not found" });
+      return res.status(401).json({
+        error: "User not found",
+      });
     }
 
     const user = result.rows[0];
 
     if (user.password !== password) {
-      return res.status(401).json({ error: "Wrong password" });
+      return res.status(401).json({
+        error: "Wrong password",
+      });
     }
 
-    res.json({ message: "Login successful", user });
+    res.json({
+      message: "Login successful",
+      user,
+    });
   } catch (err) {
     console.error("LOGIN ERROR:", err);
-    res.status(500).json({ error: err.message });
+
+    res.status(500).json({
+      error: err.message,
+    });
   }
 });
 
-// TEST DB
+// ✅ TEST DB
 app.get("/test-db", async (req, res) => {
   try {
     const result = await pool.query("SELECT NOW()");
+
     res.json(result.rows);
   } catch (err) {
     console.error("TEST DB ERROR:", err);
-    res.status(500).json({ error: err.message });
+
+    res.status(500).json({
+      error: err.message,
+    });
   }
 });
 
