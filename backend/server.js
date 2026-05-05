@@ -7,7 +7,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ DATABASE CONNECTION (RENDER UYUMLU)
+// ✅ DATABASE CONNECTION
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
@@ -20,7 +20,26 @@ app.get("/", (req, res) => {
   res.send("Barbershop booking API is running");
 });
 
-// SERVICES API
+// 🔥 FIX DB (EN ÖNEMLİ)
+app.get("/fix-db", async (req, res) => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        name TEXT,
+        email TEXT UNIQUE,
+        password TEXT
+      );
+    `);
+
+    res.send("Users table created");
+  } catch (err) {
+    console.error("FIX DB ERROR:", err);
+    res.status(500).send(err.message);
+  }
+});
+
+// SERVICES
 app.get("/services", (req, res) => {
   res.json([
     { id: 1, name: "Haircut", price: 20 },
@@ -29,7 +48,7 @@ app.get("/services", (req, res) => {
   ]);
 });
 
-// BARBERS API
+// BARBERS
 app.get("/barbers", (req, res) => {
   res.json([
     { id: 1, name: "Ahmet" },
@@ -38,7 +57,7 @@ app.get("/barbers", (req, res) => {
   ]);
 });
 
-// ✅ GET USER APPOINTMENTS
+// APPOINTMENTS
 app.get("/appointments/:user_id", async (req, res) => {
   try {
     const result = await pool.query(
@@ -52,12 +71,10 @@ app.get("/appointments/:user_id", async (req, res) => {
   }
 });
 
-// ✅ CREATE APPOINTMENT
 app.post("/appointments", async (req, res) => {
   const { user_id, barber_id, service_id, date, time } = req.body;
 
   try {
-    // DOUBLE BOOKING CHECK
     const existing = await pool.query(
       `SELECT * FROM appointments 
        WHERE barber_id = $1 AND date = $2 AND time = $3`,
@@ -70,7 +87,6 @@ app.post("/appointments", async (req, res) => {
       });
     }
 
-    // INSERT
     const result = await pool.query(
       `INSERT INTO appointments 
       (user_id, barber_id, service_id, date, time, status)
@@ -89,7 +105,7 @@ app.post("/appointments", async (req, res) => {
   }
 });
 
-// ✅ REGISTER
+// REGISTER
 app.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -107,22 +123,18 @@ app.post("/register", async (req, res) => {
       return res.status(400).json({ error: "Email already exists" });
     }
 
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ error: err.message });
   }
 });
 
-// ✅ LOGIN (FIXLENMİŞ)
+// LOGIN
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    console.log("LOGIN REQUEST:", email);
-
     const result = await pool.query("SELECT * FROM users WHERE email = $1", [
       email,
     ]);
-
-    console.log("QUERY RESULT:", result.rows);
 
     if (result.rows.length === 0) {
       return res.status(401).json({ error: "User not found" });
@@ -136,14 +148,12 @@ app.post("/login", async (req, res) => {
 
     res.json({ message: "Login successful", user });
   } catch (err) {
-    console.error("🔥 LOGIN ERROR FULL:", err);
-    res.status(500).json({
-      error: err.message,
-    });
+    console.error("LOGIN ERROR:", err);
+    res.status(500).json({ error: err.message });
   }
 });
 
-// ✅ TEST DB CONNECTION
+// TEST DB
 app.get("/test-db", async (req, res) => {
   try {
     const result = await pool.query("SELECT NOW()");
@@ -154,7 +164,7 @@ app.get("/test-db", async (req, res) => {
   }
 });
 
-// SERVER START
+// START
 const PORT = process.env.PORT || 3001;
 
 app.listen(PORT, () => {
