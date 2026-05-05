@@ -34,16 +34,19 @@ function App() {
 
   // USER APPOINTMENTS
   useEffect(() => {
-    if (user) {
+    if (user && user.id) {
       getAppointments();
     }
   }, [user]);
 
   const getAppointments = async () => {
     try {
+      if (!user || !user.id) return;
+
       const res = await fetch(`${API_URL}/appointments/${user.id}`);
       const data = await res.json();
-      setAppointments(data);
+
+      setAppointments(data || []);
     } catch (err) {
       console.error(err);
     }
@@ -165,7 +168,7 @@ function App() {
   // MAIN SCREEN
   return (
     <div style={{ padding: "40px" }}>
-      <h1>Welcome, {user.name}</h1>
+      <h1>Welcome, {user?.name}</h1>
 
       <button onClick={() => setUser(null)}>Logout</button>
 
