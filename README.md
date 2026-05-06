@@ -5,7 +5,7 @@ Modern full-stack appointment booking system for beauty salons and barbershops.
 ## Live Demo
 
 Frontend:
-https://YOUR-FRONTEND-LINK.onrender.com
+https://elan-beauty.onrender.com
 
 Backend API:
 https://barbershop-booking-gauq.onrender.com
