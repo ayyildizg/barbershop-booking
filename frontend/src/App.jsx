@@ -476,7 +476,7 @@ function App() {
           </div>
         </div>
 
-        {/* STATS */}
+        {/* STATS - Her iki rol için de gösterilir */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
           <div className="bg-slate-900/70 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 text-center shadow-lg">
             <p className="text-4xl mb-3">⭐</p>
@@ -500,107 +500,109 @@ function App() {
           </div>
         </div>
 
-        {/* GRID - CREATE ve USER APPOINTMENTS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* CREATE */}
-          <div className="bg-slate-900/70 backdrop-blur-xl p-6 md:p-8 rounded-3xl border border-slate-800 shadow-[0_0_35px_rgba(139,92,246,0.12)] hover:shadow-[0_0_45px_rgba(139,92,246,0.2)] transition">
-            <h2 className="text-2xl md:text-3xl font-bold mb-6">
-              ✨ Create Appointment
-            </h2>
+        {/* NORMAL KULLANICI DASHBOARD - CREATE, MY APPOINTMENTS, HISTORY */}
+        {user?.role !== "admin" && (
+          <>
+            {/* CREATE ve MY APPOINTMENTS Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* CREATE APPOINTMENT */}
+              <div className="bg-slate-900/70 backdrop-blur-xl p-6 md:p-8 rounded-3xl border border-slate-800 shadow-[0_0_35px_rgba(139,92,246,0.12)] hover:shadow-[0_0_45px_rgba(139,92,246,0.2)] transition">
+                <h2 className="text-2xl md:text-3xl font-bold mb-6">
+                  ✨ Create Appointment
+                </h2>
 
-            {/* SERVICES */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-              {services.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => setSelectedService(s.id)}
-                  className={`p-5 rounded-2xl border transition duration-300 text-left ${
-                    selectedService == s.id
-                      ? "border-violet-500 bg-violet-600/20 shadow-[0_0_25px_rgba(139,92,246,0.35)]"
-                      : "border-slate-700 bg-slate-800/70 hover:border-violet-400 hover:-translate-y-1"
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-lg font-bold">{s.name}</h3>
-                    <span className="text-yellow-400 font-bold">
-                      ${s.price}
-                    </span>
-                  </div>
-                  <p className="text-slate-400 text-sm leading-relaxed">
-                    {s.description}
-                  </p>
-                </button>
-              ))}
-            </div>
-
-            {/* BARBERS */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-              {barbers.map((b) => (
-                <button
-                  key={b.id}
-                  onClick={() => setSelectedBarber(b.id)}
-                  className={`p-5 rounded-2xl border transition duration-300 text-left ${
-                    selectedBarber == b.id
-                      ? "border-fuchsia-500 bg-fuchsia-600/20 shadow-[0_0_25px_rgba(217,70,239,0.35)]"
-                      : "border-slate-700 bg-slate-800/70 hover:border-fuchsia-400 hover:-translate-y-1"
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <h3 className="text-xl font-bold">{b.name}</h3>
-                      <p className="text-slate-400 text-sm mt-2 leading-relaxed">
-                        {b.name === "James Carter" &&
-                          "Fade & modern haircut specialist"}
-                        {b.name === "Michael Reed" && "Premium styling expert"}
-                        {b.name === "Daniel Brooks" &&
-                          "Beard design specialist"}
-                        {b.name === "Ethan Walker" &&
-                          "Color & hair care expert"}
-                        {b.name === "Noah Bennett" &&
-                          "Classic haircut professional"}
+                {/* SERVICES */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                  {services.map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => setSelectedService(s.id)}
+                      className={`p-5 rounded-2xl border transition duration-300 text-left ${
+                        selectedService == s.id
+                          ? "border-violet-500 bg-violet-600/20 shadow-[0_0_25px_rgba(139,92,246,0.35)]"
+                          : "border-slate-700 bg-slate-800/70 hover:border-violet-400 hover:-translate-y-1"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-lg font-bold">{s.name}</h3>
+                        <span className="text-yellow-400 font-bold">
+                          ${s.price}
+                        </span>
+                      </div>
+                      <p className="text-slate-400 text-sm leading-relaxed">
+                        {s.description}
                       </p>
-                    </div>
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center font-bold text-xl shadow-lg">
-                      {b.name.charAt(0)}
-                    </div>
-                  </div>
+                    </button>
+                  ))}
+                </div>
+
+                {/* BARBERS */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                  {barbers.map((b) => (
+                    <button
+                      key={b.id}
+                      onClick={() => setSelectedBarber(b.id)}
+                      className={`p-5 rounded-2xl border transition duration-300 text-left ${
+                        selectedBarber == b.id
+                          ? "border-fuchsia-500 bg-fuchsia-600/20 shadow-[0_0_25px_rgba(217,70,239,0.35)]"
+                          : "border-slate-700 bg-slate-800/70 hover:border-fuchsia-400 hover:-translate-y-1"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <h3 className="text-xl font-bold">{b.name}</h3>
+                          <p className="text-slate-400 text-sm mt-2 leading-relaxed">
+                            {b.name === "James Carter" &&
+                              "Fade & modern haircut specialist"}
+                            {b.name === "Michael Reed" &&
+                              "Premium styling expert"}
+                            {b.name === "Daniel Brooks" &&
+                              "Beard design specialist"}
+                            {b.name === "Ethan Walker" &&
+                              "Color & hair care expert"}
+                            {b.name === "Noah Bennett" &&
+                              "Classic haircut professional"}
+                          </p>
+                        </div>
+                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center font-bold text-xl shadow-lg">
+                          {b.name.charAt(0)}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                <input
+                  type="date"
+                  className="w-full mb-6 p-4 rounded-xl bg-slate-800/80 border border-slate-700 focus:border-violet-500 outline-none transition"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                />
+
+                <select
+                  className="w-full mb-6 p-4 rounded-xl bg-slate-800/80 border border-slate-700 focus:border-violet-500 outline-none transition"
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)}
+                >
+                  <option value="">Select time</option>
+                  {times
+                    .filter((t) => !bookedTimes.includes(t))
+                    .map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                </select>
+
+                <button
+                  onClick={createBooking}
+                  className="w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:opacity-90 hover:scale-[1.02] transition rounded-xl p-4 font-semibold shadow-lg"
+                >
+                  Create Appointment
                 </button>
-              ))}
-            </div>
+              </div>
 
-            <input
-              type="date"
-              className="w-full mb-6 p-4 rounded-xl bg-slate-800/80 border border-slate-700 focus:border-violet-500 outline-none transition"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
-
-            <select
-              className="w-full mb-6 p-4 rounded-xl bg-slate-800/80 border border-slate-700 focus:border-violet-500 outline-none transition"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-            >
-              <option value="">Select time</option>
-              {times
-                .filter((t) => !bookedTimes.includes(t))
-                .map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-            </select>
-
-            <button
-              onClick={createBooking}
-              className="w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:opacity-90 hover:scale-[1.02] transition rounded-xl p-4 font-semibold shadow-lg"
-            >
-              Create Appointment
-            </button>
-          </div>
-
-          {/* USER APPOINTMENTS - SADECE NORMAL KULLANICILAR İÇİN */}
-          {user?.role !== "admin" && (
-            <>
+              {/* MY APPOINTMENTS */}
               <div className="bg-slate-900/70 backdrop-blur-xl p-6 md:p-8 rounded-3xl border border-slate-800 shadow-[0_0_35px_rgba(139,92,246,0.12)] hover:shadow-[0_0_45px_rgba(139,92,246,0.2)] transition">
                 <h2 className="text-2xl md:text-3xl font-bold mb-6">
                   📅 My Appointments
@@ -676,59 +678,57 @@ function App() {
                   </div>
                 )}
               </div>
-            </>
-          )}
-        </div>
+            </div>
 
-        {/* HISTORY - SADECE NORMAL KULLANICILAR İÇİN */}
-        {user?.role !== "admin" && (
-          <div className="bg-slate-900/70 backdrop-blur-xl p-6 md:p-8 rounded-3xl mt-10 border border-slate-800 shadow-[0_0_35px_rgba(139,92,246,0.12)]">
-            <h2 className="text-2xl md:text-3xl font-bold mb-6">
-              🕘 Appointment History
-            </h2>
-            {historyAppointments.length === 0 ? (
-              <div className="text-center py-10">
-                <p className="text-5xl mb-4">🕘</p>
-                <p className="text-slate-300 text-lg font-medium">
-                  No history yet
-                </p>
-                <p className="text-slate-500 mt-2">
-                  Your completed appointments will appear here
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {historyAppointments.map((a) => (
-                  <div
-                    key={a.id}
-                    className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700 hover:border-violet-500 hover:-translate-y-1 transition duration-300 shadow-lg"
-                  >
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div>
-                        <p className="font-semibold text-lg">{a.date}</p>
-                        <p className="text-slate-400">{a.time}</p>
+            {/* HISTORY */}
+            <div className="bg-slate-900/70 backdrop-blur-xl p-6 md:p-8 rounded-3xl mt-10 border border-slate-800 shadow-[0_0_35px_rgba(139,92,246,0.12)]">
+              <h2 className="text-2xl md:text-3xl font-bold mb-6">
+                🕘 Appointment History
+              </h2>
+              {historyAppointments.length === 0 ? (
+                <div className="text-center py-10">
+                  <p className="text-5xl mb-4">🕘</p>
+                  <p className="text-slate-300 text-lg font-medium">
+                    No history yet
+                  </p>
+                  <p className="text-slate-500 mt-2">
+                    Your completed appointments will appear here
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {historyAppointments.map((a) => (
+                    <div
+                      key={a.id}
+                      className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700 hover:border-violet-500 hover:-translate-y-1 transition duration-300 shadow-lg"
+                    >
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                          <p className="font-semibold text-lg">{a.date}</p>
+                          <p className="text-slate-400">{a.time}</p>
+                        </div>
+                        <span
+                          className={`px-4 py-2 rounded-xl font-semibold ${
+                            a.status === "approved"
+                              ? "bg-green-600"
+                              : a.status === "rejected"
+                                ? "bg-red-600"
+                                : "bg-gray-600"
+                          }`}
+                        >
+                          {a.status === "rejected"
+                            ? "Rejected"
+                            : a.status === "approved"
+                              ? "Completed"
+                              : "Cancelled"}
+                        </span>
                       </div>
-                      <span
-                        className={`px-4 py-2 rounded-xl font-semibold ${
-                          a.status === "approved"
-                            ? "bg-green-600"
-                            : a.status === "rejected"
-                              ? "bg-red-600"
-                              : "bg-gray-600"
-                        }`}
-                      >
-                        {a.status === "rejected"
-                          ? "Rejected"
-                          : a.status === "approved"
-                            ? "Completed"
-                            : "Cancelled"}
-                      </span>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
         )}
 
         {/* REVIEW FORM */}
@@ -765,7 +765,7 @@ function App() {
           </div>
         )}
 
-        {/* REVIEWS */}
+        {/* REVIEWS - Her iki rol için de gösterilir */}
         <div className="bg-slate-900/70 backdrop-blur-xl p-6 md:p-8 rounded-3xl mt-10 border border-slate-800 shadow-[0_0_40px_rgba(250,204,21,0.08)]">
           <h2 className="text-2xl md:text-3xl font-bold mb-6">
             ⭐ Customer Reviews
@@ -809,7 +809,7 @@ function App() {
           )}
         </div>
 
-        {/* ADMIN PANEL VE ADMIN HISTORY - SADECE ADMINLER İÇİN */}
+        {/* ADMIN DASHBOARD - ADMIN PANEL ve ADMIN HISTORY */}
         {user?.role === "admin" && (
           <>
             <div className="bg-slate-900/70 backdrop-blur-xl p-6 md:p-8 rounded-3xl mt-10 border border-slate-800 shadow-[0_0_35px_rgba(139,92,246,0.12)]">
