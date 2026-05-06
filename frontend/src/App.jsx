@@ -488,9 +488,6 @@ function App() {
                       ${s.price}
                     </span>
                   </div>
-                  <p className="text-slate-400 text-sm">
-                    Premium beauty experience
-                  </p>
 
                   {/* ✅ SERVICE DESCRIPTION */}
                   <p className="text-slate-400 text-sm mt-2">
@@ -534,9 +531,6 @@ function App() {
                       {b.name.charAt(0)}
                     </div>
                   </div>
-                  <p className="text-slate-500 text-sm">
-                    Premium beauty experience
-                  </p>
                 </button>
               ))}
             </div>
