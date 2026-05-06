@@ -598,24 +598,107 @@ function App() {
             </button>
           </div>
 
-          {/* USER APPOINTMENTS */}
-          <div className="bg-slate-900/70 backdrop-blur-xl p-6 md:p-8 rounded-3xl border border-slate-800 shadow-[0_0_35px_rgba(139,92,246,0.12)] hover:shadow-[0_0_45px_rgba(139,92,246,0.2)] transition">
+          {/* USER APPOINTMENTS - SADECE NORMAL KULLANICILAR İÇİN */}
+          {user?.role !== "admin" && (
+            <>
+              <div className="bg-slate-900/70 backdrop-blur-xl p-6 md:p-8 rounded-3xl border border-slate-800 shadow-[0_0_35px_rgba(139,92,246,0.12)] hover:shadow-[0_0_45px_rgba(139,92,246,0.2)] transition">
+                <h2 className="text-2xl md:text-3xl font-bold mb-6">
+                  📅 My Appointments
+                </h2>
+                {appointments.length === 0 ? (
+                  <div className="text-center py-10">
+                    <p className="text-5xl mb-4">✨</p>
+                    <p className="text-slate-300 text-lg font-medium">
+                      No appointments yet
+                    </p>
+                    <p className="text-slate-500 mt-2">
+                      Book your first premium session
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {appointments.map((a) => (
+                      <div
+                        key={a.id}
+                        className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700 hover:border-violet-500 hover:-translate-y-1 transition duration-300 shadow-lg"
+                      >
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                          <div>
+                            <p className="font-semibold text-lg">{a.date}</p>
+                            <p className="text-slate-400">{a.time}</p>
+                            <p className="text-sm text-slate-500 mt-1">
+                              Service:{" "}
+                              {services.find((s) => s.id === a.service_id)
+                                ?.name || "Loading..."}
+                            </p>
+                            <p className="text-sm text-slate-500">
+                              Barber:{" "}
+                              {barbers.find((b) => b.id === a.barber_id)
+                                ?.name || "Loading..."}
+                            </p>
+                          </div>
+                          <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
+                            <span
+                              className={`px-4 py-2 rounded-xl font-semibold ${
+                                a.status === "approved"
+                                  ? "bg-green-600"
+                                  : a.status === "rejected"
+                                    ? "bg-red-600"
+                                    : "bg-yellow-500 text-black"
+                              }`}
+                            >
+                              {a.status === "approved"
+                                ? "Approved"
+                                : a.status === "rejected"
+                                  ? "Rejected"
+                                  : "Pending"}
+                            </span>
+                            {a.status === "pending" && (
+                              <button
+                                onClick={() => deleteAppointment(a.id)}
+                                className="bg-red-600 hover:bg-red-700 hover:scale-105 transition px-4 py-2 rounded-xl"
+                              >
+                                Cancel
+                              </button>
+                            )}
+                            {a.status === "approved" && (
+                              <button
+                                onClick={() => setSelectedAppointment(a.id)}
+                                className="bg-violet-600 hover:bg-violet-700 hover:scale-105 transition px-4 py-2 rounded-xl"
+                              >
+                                Complete Service
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* HISTORY - SADECE NORMAL KULLANICILAR İÇİN */}
+        {user?.role !== "admin" && (
+          <div className="bg-slate-900/70 backdrop-blur-xl p-6 md:p-8 rounded-3xl mt-10 border border-slate-800 shadow-[0_0_35px_rgba(139,92,246,0.12)]">
             <h2 className="text-2xl md:text-3xl font-bold mb-6">
-              📅 My Appointments
+              🕘 Appointment History
             </h2>
-            {appointments.length === 0 ? (
+            {historyAppointments.length === 0 ? (
               <div className="text-center py-10">
-                <p className="text-5xl mb-4">✨</p>
+                <p className="text-5xl mb-4">🕘</p>
                 <p className="text-slate-300 text-lg font-medium">
-                  No appointments yet
+                  No history yet
                 </p>
                 <p className="text-slate-500 mt-2">
-                  Book your first premium session
+                  Your completed appointments will appear here
                 </p>
               </div>
             ) : (
               <div className="space-y-4">
-                {appointments.map((a) => (
+                {historyAppointments.map((a) => (
                   <div
                     key={a.id}
                     className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700 hover:border-violet-500 hover:-translate-y-1 transition duration-300 shadow-lg"
@@ -624,106 +707,29 @@ function App() {
                       <div>
                         <p className="font-semibold text-lg">{a.date}</p>
                         <p className="text-slate-400">{a.time}</p>
-                        <p className="text-sm text-slate-500 mt-1">
-                          Service:{" "}
-                          {services.find((s) => s.id === a.service_id)?.name ||
-                            "Loading..."}
-                        </p>
-                        <p className="text-sm text-slate-500">
-                          Barber:{" "}
-                          {barbers.find((b) => b.id === a.barber_id)?.name ||
-                            "Loading..."}
-                        </p>
                       </div>
-                      <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
-                        <span
-                          className={`px-4 py-2 rounded-xl font-semibold ${
-                            a.status === "approved"
-                              ? "bg-green-600"
-                              : a.status === "rejected"
-                                ? "bg-red-600"
-                                : "bg-yellow-500 text-black"
-                          }`}
-                        >
-                          {a.status === "approved"
-                            ? "Approved"
+                      <span
+                        className={`px-4 py-2 rounded-xl font-semibold ${
+                          a.status === "approved"
+                            ? "bg-green-600"
                             : a.status === "rejected"
-                              ? "Rejected"
-                              : "Pending"}
-                        </span>
-                        {a.status === "pending" && (
-                          <button
-                            onClick={() => deleteAppointment(a.id)}
-                            className="bg-red-600 hover:bg-red-700 hover:scale-105 transition px-4 py-2 rounded-xl"
-                          >
-                            Cancel
-                          </button>
-                        )}
-                        {a.status === "approved" && (
-                          <button
-                            onClick={() => setSelectedAppointment(a.id)}
-                            className="bg-violet-600 hover:bg-violet-700 hover:scale-105 transition px-4 py-2 rounded-xl"
-                          >
-                            Complete Service
-                          </button>
-                        )}
-                      </div>
+                              ? "bg-red-600"
+                              : "bg-gray-600"
+                        }`}
+                      >
+                        {a.status === "rejected"
+                          ? "Rejected"
+                          : a.status === "approved"
+                            ? "Completed"
+                            : "Cancelled"}
+                      </span>
                     </div>
                   </div>
                 ))}
               </div>
             )}
           </div>
-        </div>
-
-        {/* HISTORY */}
-        <div className="bg-slate-900/70 backdrop-blur-xl p-6 md:p-8 rounded-3xl mt-10 border border-slate-800 shadow-[0_0_35px_rgba(139,92,246,0.12)]">
-          <h2 className="text-2xl md:text-3xl font-bold mb-6">
-            🕘 Appointment History
-          </h2>
-          {historyAppointments.length === 0 ? (
-            <div className="text-center py-10">
-              <p className="text-5xl mb-4">🕘</p>
-              <p className="text-slate-300 text-lg font-medium">
-                No history yet
-              </p>
-              <p className="text-slate-500 mt-2">
-                Your completed appointments will appear here
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {historyAppointments.map((a) => (
-                <div
-                  key={a.id}
-                  className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700 hover:border-violet-500 hover:-translate-y-1 transition duration-300 shadow-lg"
-                >
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                      <p className="font-semibold text-lg">{a.date}</p>
-                      <p className="text-slate-400">{a.time}</p>
-                    </div>
-                    <span
-                      className={`px-4 py-2 rounded-xl font-semibold ${
-                        a.status === "approved"
-                          ? "bg-green-600"
-                          : a.status === "rejected"
-                            ? "bg-red-600"
-                            : "bg-gray-600"
-                      }`}
-                    >
-                      {a.status === "rejected"
-                        ? "Rejected"
-                        : a.status === "approved"
-                          ? "Completed"
-                          : "Cancelled"}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        )}
 
         {/* REVIEW FORM */}
         {selectedAppointment && (
@@ -803,7 +809,7 @@ function App() {
           )}
         </div>
 
-        {/* ADMIN PANEL */}
+        {/* ADMIN PANEL VE ADMIN HISTORY - SADECE ADMINLER İÇİN */}
         {user?.role === "admin" && (
           <>
             <div className="bg-slate-900/70 backdrop-blur-xl p-6 md:p-8 rounded-3xl mt-10 border border-slate-800 shadow-[0_0_35px_rgba(139,92,246,0.12)]">
