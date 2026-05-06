@@ -42,6 +42,8 @@ function App() {
 
   // ✅ USER APPOINTMENTS
   const getAppointments = async () => {
+    if (!user?.id) return;
+
     try {
       const res = await fetch(`${API_URL}/appointments/${user.id}`, {
         headers: {
@@ -111,7 +113,8 @@ function App() {
 
     try {
       if (savedUser && savedUser !== "undefined") {
-        setUser(JSON.parse(savedUser));
+        const parsedUser = JSON.parse(savedUser);
+        setUser(parsedUser);
       }
     } catch (err) {
       console.error(err);
@@ -152,7 +155,7 @@ function App() {
         `${API_URL}/available-times?barber_id=${selectedBarber}&date=${date}`,
       )
         .then((res) => res.json())
-        .then((data) => setBookedTimes(data))
+        .then((data) => setBookedTimes(Array.isArray(data) ? data : []))
         .catch(console.error);
     }
   }, [selectedBarber, date]);
@@ -169,9 +172,9 @@ function App() {
         body: JSON.stringify({ status }),
       });
 
-      getAppointments();
-      if (user.role === "admin") {
-        getAdminAppointments();
+      await getAppointments();
+      if (user?.role === "admin") {
+        await getAdminAppointments();
       }
     } catch (err) {
       console.error(err);
@@ -208,6 +211,11 @@ function App() {
       }
 
       setUser(loggedUser);
+
+      // Reset form fields
+      setName("");
+      setEmail("");
+      setPassword("");
     } catch (err) {
       console.error(err);
       alert("Network error");
@@ -219,6 +227,12 @@ function App() {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     setUser(null);
+    setSelectedService("");
+    setSelectedBarber("");
+    setDate("");
+    setTime("");
+    setReviewText("");
+    setSelectedAppointment(null);
   };
 
   // ✅ DELETE APPOINTMENT
@@ -237,6 +251,7 @@ function App() {
       }
     } catch (err) {
       console.error(err);
+      alert("Failed to delete appointment");
     }
   };
 
@@ -270,28 +285,42 @@ function App() {
         return;
       }
 
-      alert("Appointment created");
-      getAppointments();
-      if (user.role === "admin") {
-        getAdminAppointments();
+      alert("Appointment created successfully");
+
+      // Reset form
+      setSelectedService("");
+      setSelectedBarber("");
+      setDate("");
+      setTime("");
+
+      await getAppointments();
+      if (user?.role === "admin") {
+        await getAdminAppointments();
       }
 
-      fetch(
-        `${API_URL}/available-times?barber_id=${selectedBarber}&date=${date}`,
-      )
-        .then((res) => res.json())
-        .then((data) => setBookedTimes(data));
+      // Refresh available times
+      if (selectedBarber && date) {
+        const timesRes = await fetch(
+          `${API_URL}/available-times?barber_id=${selectedBarber}&date=${date}`,
+        );
+        const timesData = await timesRes.json();
+        setBookedTimes(Array.isArray(timesData) ? timesData : []);
+      }
     } catch (err) {
       console.error(err);
+      alert("Failed to create appointment");
     }
   };
 
   // ✅ CREATE REVIEW
   const createReview = async () => {
-    if (!reviewText || !selectedAppointment) return;
+    if (!reviewText || !selectedAppointment) {
+      alert("Please write a review");
+      return;
+    }
 
     try {
-      await fetch(`${API_URL}/reviews`, {
+      const res = await fetch(`${API_URL}/reviews`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -305,12 +334,18 @@ function App() {
         }),
       });
 
+      if (!res.ok) {
+        throw new Error("Failed to submit review");
+      }
+
       setReviewText("");
       setSelectedAppointment(null);
-      getReviews();
-      alert("Review added");
+      setRating(5);
+      await getReviews();
+      alert("Review added successfully");
     } catch (err) {
       console.error(err);
+      alert("Failed to submit review");
     }
   };
 
@@ -335,6 +370,7 @@ function App() {
             <input
               className="w-full mb-4 p-4 rounded-xl bg-slate-800 text-white border border-slate-700 outline-none focus:border-violet-500 transition"
               placeholder="Name"
+              value={name}
               onChange={(e) => setName(e.target.value)}
             />
           )}
@@ -342,6 +378,8 @@ function App() {
           <input
             className="w-full mb-4 p-4 rounded-xl bg-slate-800 text-white border border-slate-700 outline-none focus:border-violet-500 transition"
             placeholder="Email"
+            type="email"
+            value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
 
@@ -349,6 +387,7 @@ function App() {
             type="password"
             className="w-full mb-6 p-4 rounded-xl bg-slate-800 text-white border border-slate-700 outline-none focus:border-violet-500 transition"
             placeholder="Password"
+            value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
 
@@ -360,7 +399,12 @@ function App() {
           </button>
 
           <button
-            onClick={() => setIsLogin(!isLogin)}
+            onClick={() => {
+              setIsLogin(!isLogin);
+              setName("");
+              setEmail("");
+              setPassword("");
+            }}
             className="w-full mt-4 text-slate-400 hover:text-white transition"
           >
             Switch to {isLogin ? "Register" : "Login"}
@@ -478,12 +522,10 @@ function App() {
                 >
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-lg font-bold">{s.name}</h3>
-
                     <span className="text-yellow-400 font-bold">
                       ${s.price}
                     </span>
                   </div>
-
                   <p className="text-slate-400 text-sm leading-relaxed">
                     {s.description}
                   </p>
@@ -491,77 +533,70 @@ function App() {
               ))}
             </div>
 
-{/* BARBERS */}
-<div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-  {barbers.map((b) => (
-    <button
-      key={b.id}
-      onClick={() => setSelectedBarber(b.id)}
-      className={`p-5 rounded-2xl border transition duration-300 text-left ${
-        selectedBarber == b.id
-          ? "border-fuchsia-500 bg-fuchsia-600/20 shadow-[0_0_25px_rgba(217,70,239,0.35)]"
-          : "border-slate-700 bg-slate-800/70 hover:border-fuchsia-400 hover:-translate-y-1"
-      }`}
-    >
-      <div className="flex items-center justify-between mb-3">
-        <div>
-          <h3 className="text-xl font-bold">
-            {b.name}
-          </h3>
+            {/* BARBERS */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+              {barbers.map((b) => (
+                <button
+                  key={b.id}
+                  onClick={() => setSelectedBarber(b.id)}
+                  className={`p-5 rounded-2xl border transition duration-300 text-left ${
+                    selectedBarber == b.id
+                      ? "border-fuchsia-500 bg-fuchsia-600/20 shadow-[0_0_25px_rgba(217,70,239,0.35)]"
+                      : "border-slate-700 bg-slate-800/70 hover:border-fuchsia-400 hover:-translate-y-1"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <h3 className="text-xl font-bold">{b.name}</h3>
+                      <p className="text-slate-400 text-sm mt-2 leading-relaxed">
+                        {b.name === "James Carter" &&
+                          "Fade & modern haircut specialist"}
+                        {b.name === "Michael Reed" && "Premium styling expert"}
+                        {b.name === "Daniel Brooks" &&
+                          "Beard design specialist"}
+                        {b.name === "Ethan Walker" &&
+                          "Color & hair care expert"}
+                        {b.name === "Noah Bennett" &&
+                          "Classic haircut professional"}
+                      </p>
+                    </div>
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center font-bold text-xl shadow-lg">
+                      {b.name.charAt(0)}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
 
-          <p className="text-slate-400 text-sm mt-2 leading-relaxed">
-            {b.name === "James Carter" &&
-              "Fade & modern haircut specialist"}
+            <input
+              type="date"
+              className="w-full mb-6 p-4 rounded-xl bg-slate-800/80 border border-slate-700 focus:border-violet-500 outline-none transition"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
 
-            {b.name === "Michael Reed" &&
-              "Premium styling expert"}
+            <select
+              className="w-full mb-6 p-4 rounded-xl bg-slate-800/80 border border-slate-700 focus:border-violet-500 outline-none transition"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+            >
+              <option value="">Select time</option>
+              {times
+                .filter((t) => !bookedTimes.includes(t))
+                .map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+            </select>
 
-            {b.name === "Daniel Brooks" &&
-              "Beard design specialist"}
-
-            {b.name === "Ethan Walker" &&
-              "Color & hair care expert"}
-
-            {b.name === "Noah Bennett" &&
-              "Classic haircut professional"}
-          </p>
-        </div>
-
-        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center font-bold text-xl shadow-lg">
-          {b.name.charAt(0)}
-        </div>
-      </div>
-    </button>
-  ))}
-</div>
-
-<input
-  type="date"
-  className="w-full mb-6 p-4 rounded-xl bg-slate-800/80 border border-slate-700 focus:border-violet-500 outline-none transition"
-  onChange={(e) => setDate(e.target.value)}
-/>
-
-<select
-  className="w-full mb-6 p-4 rounded-xl bg-slate-800/80 border border-slate-700 focus:border-violet-500 outline-none transition"
-  onChange={(e) => setTime(e.target.value)}
->
-  <option>Select time</option>
-
-  {times
-    .filter((t) => !bookedTimes.includes(t))
-    .map((t) => (
-      <option key={t} value={t}>
-        {t}
-      </option>
-    ))}
-</select>
-
-<button
-  onClick={createBooking}
-  className="w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:opacity-90 hover:scale-[1.02] transition rounded-xl p-4 font-semibold shadow-lg"
->
-  Create Appointment
-</button>
+            <button
+              onClick={createBooking}
+              className="w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:opacity-90 hover:scale-[1.02] transition rounded-xl p-4 font-semibold shadow-lg"
+            >
+              Create Appointment
+            </button>
+          </div>
 
           {/* USER APPOINTMENTS */}
           <div className="bg-slate-900/70 backdrop-blur-xl p-6 md:p-8 rounded-3xl border border-slate-800 shadow-[0_0_35px_rgba(139,92,246,0.12)] hover:shadow-[0_0_45px_rgba(139,92,246,0.2)] transition">
@@ -589,6 +624,16 @@ function App() {
                       <div>
                         <p className="font-semibold text-lg">{a.date}</p>
                         <p className="text-slate-400">{a.time}</p>
+                        <p className="text-sm text-slate-500 mt-1">
+                          Service:{" "}
+                          {services.find((s) => s.id === a.service_id)?.name ||
+                            "Loading..."}
+                        </p>
+                        <p className="text-sm text-slate-500">
+                          Barber:{" "}
+                          {barbers.find((b) => b.id === a.barber_id)?.name ||
+                            "Loading..."}
+                        </p>
                       </div>
                       <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
                         <span
@@ -737,7 +782,7 @@ function App() {
                   className="bg-slate-800/70 backdrop-blur-xl p-5 rounded-2xl border border-slate-700 hover:border-yellow-400 hover:-translate-y-1 transition duration-300 shadow-[0_0_25px_rgba(250,204,21,0.08)]"
                 >
                   <div className="flex items-center gap-1 mb-3">
-                    {[...Array(r.rating)].map((_, i) => (
+                    {[...Array(Math.min(5, r.rating))].map((_, i) => (
                       <span key={i} className="text-yellow-400 text-xl">
                         ★
                       </span>
@@ -765,49 +810,82 @@ function App() {
               <h2 className="text-3xl md:text-4xl font-bold mb-8">
                 🛠 Admin Panel
               </h2>
-              <div className="space-y-4">
-                {adminAppointments.map((a) => (
-                  <div
-                    key={a.id}
-                    className="bg-slate-800/80 p-6 rounded-2xl flex flex-col md:flex-row justify-between gap-5 md:items-center border border-slate-700 hover:border-violet-500 hover:-translate-y-1 transition duration-300 shadow-lg"
-                  >
-                    <div>
-                      <p className="font-bold text-lg md:text-xl">
-                        User #{a.user_id}
-                      </p>
-                      <p>
-                        {a.date} — {a.time}
-                      </p>
-                      <p>{a.status}</p>
-                    </div>
-                    <div className="flex flex-col md:flex-row gap-3">
-                      {a.status === "rejected" ? (
-                        <button
-                          onClick={() => deleteAppointment(a.id)}
-                          className="bg-gray-700 hover:bg-gray-800 hover:scale-105 transition px-4 py-2 rounded-xl"
+              {adminAppointments.length === 0 ? (
+                <div className="text-center py-10">
+                  <p className="text-5xl mb-4">📋</p>
+                  <p className="text-slate-300 text-lg font-medium">
+                    No pending appointments
+                  </p>
+                  <p className="text-slate-500 mt-2">
+                    All appointments have been processed
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {adminAppointments.map((a) => (
+                    <div
+                      key={a.id}
+                      className="bg-slate-800/80 p-6 rounded-2xl flex flex-col md:flex-row justify-between gap-5 md:items-center border border-slate-700 hover:border-violet-500 hover:-translate-y-1 transition duration-300 shadow-lg"
+                    >
+                      <div>
+                        <p className="font-bold text-lg md:text-xl">
+                          User #{a.user_id}
+                        </p>
+                        <p className="text-slate-300">
+                          {a.date} — {a.time}
+                        </p>
+                        <p className="text-slate-400 text-sm mt-1">
+                          Service:{" "}
+                          {services.find((s) => s.id === a.service_id)?.name ||
+                            "Loading..."}
+                        </p>
+                        <p className="text-slate-400 text-sm">
+                          Barber:{" "}
+                          {barbers.find((b) => b.id === a.barber_id)?.name ||
+                            "Loading..."}
+                        </p>
+                        <span
+                          className={`inline-block mt-2 px-3 py-1 rounded-lg text-xs font-semibold ${
+                            a.status === "approved"
+                              ? "bg-green-600"
+                              : a.status === "rejected"
+                                ? "bg-red-600"
+                                : "bg-yellow-500 text-black"
+                          }`}
                         >
-                          Delete
-                        </button>
-                      ) : (
-                        <>
+                          {a.status}
+                        </span>
+                      </div>
+                      <div className="flex flex-col md:flex-row gap-3">
+                        {a.status === "pending" && (
+                          <>
+                            <button
+                              onClick={() => updateStatus(a.id, "approved")}
+                              className="bg-green-600 hover:bg-green-700 hover:scale-105 transition px-4 py-2 rounded-xl"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => updateStatus(a.id, "rejected")}
+                              className="bg-red-600 hover:bg-red-700 hover:scale-105 transition px-4 py-2 rounded-xl"
+                            >
+                              Reject
+                            </button>
+                          </>
+                        )}
+                        {a.status === "rejected" && (
                           <button
-                            onClick={() => updateStatus(a.id, "approved")}
-                            className="bg-green-600 hover:bg-green-700 hover:scale-105 transition px-4 py-2 rounded-xl"
+                            onClick={() => deleteAppointment(a.id)}
+                            className="bg-gray-700 hover:bg-gray-800 hover:scale-105 transition px-4 py-2 rounded-xl"
                           >
-                            Approve
+                            Delete
                           </button>
-                          <button
-                            onClick={() => updateStatus(a.id, "rejected")}
-                            className="bg-red-600 hover:bg-red-700 hover:scale-105 transition px-4 py-2 rounded-xl"
-                          >
-                            Reject
-                          </button>
-                        </>
-                      )}
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* ADMIN HISTORY */}
@@ -833,8 +911,11 @@ function App() {
                       <div className="flex justify-between items-center">
                         <div>
                           <p className="font-semibold">User #{a.user_id}</p>
-                          <p>
+                          <p className="text-slate-300">
                             {a.date} — {a.time}
+                          </p>
+                          <p className="text-slate-400 text-sm mt-1">
+                            Status: {a.status}
                           </p>
                         </div>
                         <span className="bg-gray-600 px-4 py-2 rounded-xl font-semibold">
