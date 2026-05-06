@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 function App() {
-  const API_URL = "http://localhost:3001";
+  const API_URL = "https://barbershop-booking-gauq.onrender.com";
   const token = localStorage.getItem("token");
 
   const [user, setUser] = useState(null);
