@@ -491,63 +491,77 @@ function App() {
               ))}
             </div>
 
-            {/* BARBERS */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-              {barbers.map((b) => (
-                <button
-                  key={b.id}
-                  onClick={() => setSelectedBarber(b.id)}
-                  className={`p-5 rounded-2xl border transition duration-300 text-left ${
-                    selectedBarber == b.id
-                      ? "border-fuchsia-500 bg-fuchsia-600/20 shadow-[0_0_25px_rgba(217,70,239,0.35)]"
-                      : "border-slate-700 bg-slate-800/70 hover:border-fuchsia-400 hover:-translate-y-1"
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <h3 className="text-xl font-bold">{b.name}</h3>
+{/* BARBERS */}
+<div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+  {barbers.map((b) => (
+    <button
+      key={b.id}
+      onClick={() => setSelectedBarber(b.id)}
+      className={`p-5 rounded-2xl border transition duration-300 text-left ${
+        selectedBarber == b.id
+          ? "border-fuchsia-500 bg-fuchsia-600/20 shadow-[0_0_25px_rgba(217,70,239,0.35)]"
+          : "border-slate-700 bg-slate-800/70 hover:border-fuchsia-400 hover:-translate-y-1"
+      }`}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <h3 className="text-xl font-bold">
+            {b.name}
+          </h3>
 
-                      <p className="text-slate-400 text-sm mt-2 leading-relaxed">
-                        {b.description}
-                      </p>
-                    </div>
+          <p className="text-slate-400 text-sm mt-2 leading-relaxed">
+            {b.name === "James Carter" &&
+              "Fade & modern haircut specialist"}
 
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center font-bold text-xl shadow-lg">
-                      {b.name.charAt(0)}
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
+            {b.name === "Michael Reed" &&
+              "Premium styling expert"}
 
-            <input
-              type="date"
-              className="w-full mb-6 p-4 rounded-xl bg-slate-800/80 border border-slate-700 focus:border-violet-500 outline-none transition"
-              onChange={(e) => setDate(e.target.value)}
-            />
+            {b.name === "Daniel Brooks" &&
+              "Beard design specialist"}
 
-            <select
-              className="w-full mb-6 p-4 rounded-xl bg-slate-800/80 border border-slate-700 focus:border-violet-500 outline-none transition"
-              onChange={(e) => setTime(e.target.value)}
-            >
-              <option>Select time</option>
+            {b.name === "Ethan Walker" &&
+              "Color & hair care expert"}
 
-              {times
-                .filter((t) => !bookedTimes.includes(t))
-                .map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-            </select>
+            {b.name === "Noah Bennett" &&
+              "Classic haircut professional"}
+          </p>
+        </div>
 
-            <button
-              onClick={createBooking}
-              className="w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:opacity-90 hover:scale-[1.02] transition rounded-xl p-4 font-semibold shadow-lg"
-            >
-              Create Appointment
-            </button>
-          </div>
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center font-bold text-xl shadow-lg">
+          {b.name.charAt(0)}
+        </div>
+      </div>
+    </button>
+  ))}
+</div>
+
+<input
+  type="date"
+  className="w-full mb-6 p-4 rounded-xl bg-slate-800/80 border border-slate-700 focus:border-violet-500 outline-none transition"
+  onChange={(e) => setDate(e.target.value)}
+/>
+
+<select
+  className="w-full mb-6 p-4 rounded-xl bg-slate-800/80 border border-slate-700 focus:border-violet-500 outline-none transition"
+  onChange={(e) => setTime(e.target.value)}
+>
+  <option>Select time</option>
+
+  {times
+    .filter((t) => !bookedTimes.includes(t))
+    .map((t) => (
+      <option key={t} value={t}>
+        {t}
+      </option>
+    ))}
+</select>
+
+<button
+  onClick={createBooking}
+  className="w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:opacity-90 hover:scale-[1.02] transition rounded-xl p-4 font-semibold shadow-lg"
+>
+  Create Appointment
+</button>
 
           {/* USER APPOINTMENTS */}
           <div className="bg-slate-900/70 backdrop-blur-xl p-6 md:p-8 rounded-3xl border border-slate-800 shadow-[0_0_35px_rgba(139,92,246,0.12)] hover:shadow-[0_0_45px_rgba(139,92,246,0.2)] transition">
