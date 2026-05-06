@@ -464,6 +464,7 @@ function App() {
               ✨ Create Appointment
             </h2>
 
+            {/* SERVICES */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
               {services.map((s) => (
                 <button
@@ -476,36 +477,21 @@ function App() {
                   }`}
                 >
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-lg font-bold">
-                      {s.name === "Luxury Haircut" && "✂ Luxury Haircut"}
-                      {s.name === "Premium Coloring" && "🎨 Premium Coloring"}
-                      {s.name === "Skin Care Therapy" && "✨ Skin Care Therapy"}
-                      {s.name === "VIP Styling Session" &&
-                        "💎 VIP Styling Session"}
-                      {s.name === "Bridal Makeup" && "💄 Bridal Makeup"}
-                    </h3>
+                    <h3 className="text-lg font-bold">{s.name}</h3>
+
                     <span className="text-yellow-400 font-bold">
                       ${s.price}
                     </span>
                   </div>
 
-                  {/* ✅ SERVICE DESCRIPTION */}
-                  <p className="text-slate-400 text-sm mt-2">
-                    {s.name === "Luxury Haircut" &&
-                      "Modern styling with premium care"}
-                    {s.name === "Premium Coloring" &&
-                      "Luxury coloring and hair treatment"}
-                    {s.name === "Skin Care Therapy" &&
-                      "Relaxing professional skin treatment"}
-                    {s.name === "VIP Styling Session" &&
-                      "Exclusive beauty styling experience"}
-                    {s.name === "Bridal Makeup" &&
-                      "Elegant makeup for special moments"}
+                  <p className="text-slate-400 text-sm leading-relaxed">
+                    {s.description}
                   </p>
                 </button>
               ))}
             </div>
 
+            {/* BARBERS */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
               {barbers.map((b) => (
                 <button
@@ -519,15 +505,14 @@ function App() {
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <h3 className="text-lg font-bold">{b.name}</h3>
-                      <p className="text-slate-400 text-sm">
-                        {b.name === "Sofia" && "Senior Stylist"}
-                        {b.name === "Daniel" && "Color Expert"}
-                        {b.name === "Emma" && "Makeup Artist"}
-                        {b.name === "Olivia" && "Skin Care Specialist"}
+                      <h3 className="text-xl font-bold">{b.name}</h3>
+
+                      <p className="text-slate-400 text-sm mt-2 leading-relaxed">
+                        {b.description}
                       </p>
                     </div>
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center font-bold shadow-lg">
+
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center font-bold text-xl shadow-lg">
                       {b.name.charAt(0)}
                     </div>
                   </div>
@@ -546,6 +531,7 @@ function App() {
               onChange={(e) => setTime(e.target.value)}
             >
               <option>Select time</option>
+
               {times
                 .filter((t) => !bookedTimes.includes(t))
                 .map((t) => (
